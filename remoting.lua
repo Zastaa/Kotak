@@ -1,39 +1,41 @@
--- New Clean RemoteSpy GUI (Lightweight, Dark, Floating, Toggleable)
+-- RemoteSpy Clean & Lightweight v2
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local gui = Instance.new("ScreenGui", PlayerGui)
-gui.Name = "NewRemoteSpy"
+local gui = Instance.new("ScreenGui")
+gui.Name = "RemoteSpyLiteV2"
+gui.Parent = PlayerGui
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 
--- FRAME UTAMA
+-- Frame utama
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 420, 0, 260)
 frame.Position = UDim2.new(0.5, -210, 0.5, -130)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 frame.BorderSizePixel = 0
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Draggable = true
+frame.Active = true
 
--- HEADER
+-- Header
 local header = Instance.new("Frame", frame)
 header.Size = UDim2.new(1, 0, 0, 25)
-header.Position = UDim2.new(0, 0, 0, 0)
 header.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
 header.BorderSizePixel = 0
 
 local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1, -80, 1, 0)
 title.Position = UDim2.new(0, 5, 0, 0)
-title.Text = "RemoteSpy"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Text = "RemoteSpy Lite"
+title.TextColor3 = Color3.new(1, 1, 1)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 title.TextSize = 14
 title.TextXAlignment = Enum.TextXAlignment.Left
 
--- BUTTONS
+-- Toggle spying
 local toggleBtn = Instance.new("TextButton", header)
 toggleBtn.Size = UDim2.new(0, 50, 1, 0)
 toggleBtn.Position = UDim2.new(1, -130, 0, 0)
@@ -43,6 +45,7 @@ toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 toggleBtn.Font = Enum.Font.Gotham
 toggleBtn.TextSize = 12
 
+-- Minimize
 local minimizeBtn = Instance.new("TextButton", header)
 minimizeBtn.Size = UDim2.new(0, 60, 1, 0)
 minimizeBtn.Position = UDim2.new(1, -65, 0, 0)
@@ -52,7 +55,7 @@ minimizeBtn.TextColor3 = Color3.new(1, 1, 1)
 minimizeBtn.Font = Enum.Font.Gotham
 minimizeBtn.TextSize = 12
 
--- FILTER
+-- Filter
 local filterBox = Instance.new("TextBox", frame)
 filterBox.Size = UDim2.new(1, -10, 0, 22)
 filterBox.Position = UDim2.new(0, 5, 0, 30)
@@ -63,7 +66,7 @@ filterBox.TextColor3 = Color3.new(1, 1, 1)
 filterBox.Font = Enum.Font.Code
 filterBox.TextSize = 12
 
--- SCROLLING AREA
+-- Scroll log area
 local scroll = Instance.new("ScrollingFrame", frame)
 scroll.Size = UDim2.new(1, -10, 1, -60)
 scroll.Position = UDim2.new(0, 5, 0, 60)
@@ -77,19 +80,20 @@ local layout = Instance.new("UIListLayout", scroll)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Padding = UDim.new(0, 2)
 
--- STATE
-local spying = true
+-- State
+local spying = false
 local minimized = false
+local logCount = 0
 local maxLogs = 30
 
--- TOGGLE
+-- Toggle Spy
 toggleBtn.MouseButton1Click:Connect(function()
 	spying = not spying
 	toggleBtn.Text = spying and "ON" or "OFF"
 	toggleBtn.BackgroundColor3 = spying and Color3.fromRGB(60, 130, 60) or Color3.fromRGB(130, 60, 60)
 end)
 
--- MINIMIZE
+-- Minimize
 minimizeBtn.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	scroll.Visible = not minimized
@@ -98,7 +102,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
 	minimizeBtn.Text = minimized and "Expand" or "Minimize"
 end)
 
--- REMOTE SPY HOOK
+-- Spy Hook
 local mt = getrawmetatable(game)
 local old = mt.__namecall
 setreadonly(mt, false)
@@ -110,27 +114,38 @@ mt.__namecall = newcclosure(function(self, ...)
 		local args = {...}
 		local filter = string.lower(filterBox.Text)
 		if filter == "" or string.find(string.lower(name), filter, 1, true) then
-			-- limit
-			local logs = {}
-			for _,v in ipairs(scroll:GetChildren()) do
-				if v:IsA("TextLabel") then table.insert(logs, v) end
+			if logCount >= maxLogs then
+				for _, v in ipairs(scroll:GetChildren()) do
+					if v:IsA("TextLabel") then
+						v:Destroy()
+						logCount -= 1
+						break
+					end
+				end
 			end
-			if #logs >= maxLogs then logs[1]:Destroy() end
 
-			local label = Instance.new("TextLabel", scroll)
-			label.Size = UDim2.new(1, -4, 0, 34)
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, -4, 0, 0)
+			label.AutomaticSize = Enum.AutomaticSize.Y
 			label.BackgroundTransparency = 1
 			label.TextXAlignment = Enum.TextXAlignment.Left
 			label.TextYAlignment = Enum.TextYAlignment.Top
 			label.TextSize = 12
 			label.Font = Enum.Font.Code
+			label.TextWrapped = true
 			label.TextColor3 = Color3.new(0.7, 1, 0.7)
+
 			label.Text = "["..method.."] "..name
 			for i,v in ipairs(args) do
 				label.Text = label.Text.."\n["..i.."] = "..tostring(v)
 			end
 
-			scroll.CanvasPosition = Vector2.new(0, scroll.AbsoluteCanvasSize.Y)
+			label.Parent = scroll
+			logCount += 1
+
+			task.defer(function()
+				scroll.CanvasPosition = Vector2.new(0, scroll.AbsoluteCanvasSize.Y + 100)
+			end)
 		end
 	end
 	return old(self, ...)
