@@ -1,82 +1,80 @@
--- RemoteSpy GUI: Elegan + Filter + Auto Scroll + Clear Log
+-- Lightweight RemoteSpy GUI (Dark, Filter, Toggle, Ringan)
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local gui = Instance.new("ScreenGui", PlayerGui)
-gui.Name = "RemoteSpyUI"
+gui.Name = "RemoteSpyLite"
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 540, 0, 360)
-frame.Position = UDim2.new(0.5, -270, 0.5, -180)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+frame.Size = UDim2.new(0, 460, 0, 280)
+frame.Position = UDim2.new(0.5, -230, 0.5, -140)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 frame.BorderSizePixel = 0
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
 
--- 🔘 Toggle Button
-local toggleButton = Instance.new("TextButton", frame)
-toggleButton.Text = "🟢 RemoteSpy ON"
-toggleButton.Size = UDim2.new(0.35, -5, 0, 30)
-toggleButton.Position = UDim2.new(0, 0, 0, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Font = Enum.Font.GothamSemibold
-toggleButton.TextSize = 14
+-- 🔘 Toggle
+local toggle = Instance.new("TextButton", frame)
+toggle.Size = UDim2.new(0.3, -5, 0, 25)
+toggle.Position = UDim2.new(0, 5, 0, 5)
+toggle.Text = "🟢 ON"
+toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggle.TextSize = 13
+toggle.Font = Enum.Font.SourceSans
 
--- 🔍 Filter Box
+-- 🔍 Filter
 local filterBox = Instance.new("TextBox", frame)
-filterBox.PlaceholderText = "Filter remote name"
+filterBox.Size = UDim2.new(0.5, -10, 0, 25)
+filterBox.Position = UDim2.new(0.3, 5, 0, 5)
+filterBox.PlaceholderText = "Filter..."
 filterBox.Text = ""
-filterBox.Size = UDim2.new(0.4, -5, 0, 30)
-filterBox.Position = UDim2.new(0.35, 5, 0, 0)
-filterBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+filterBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 filterBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-filterBox.Font = Enum.Font.Gotham
-filterBox.TextSize = 14
+filterBox.TextSize = 13
+filterBox.Font = Enum.Font.SourceSans
 
--- ❌ Clear Button
-local clearButton = Instance.new("TextButton", frame)
-clearButton.Text = "🧹 Clear Log"
-clearButton.Size = UDim2.new(0.25, 0, 0, 30)
-clearButton.Position = UDim2.new(0.75, 5, 0, 0)
-clearButton.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
-clearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-clearButton.Font = Enum.Font.GothamSemibold
-clearButton.TextSize = 14
+-- 🧹 Clear
+local clearBtn = Instance.new("TextButton", frame)
+clearBtn.Size = UDim2.new(0.2, -5, 0, 25)
+clearBtn.Position = UDim2.new(0.8, 5, 0, 5)
+clearBtn.Text = "Clear"
+clearBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+clearBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+clearBtn.TextSize = 13
+clearBtn.Font = Enum.Font.SourceSans
 
--- 🧾 Log Frame
-local logBox = Instance.new("ScrollingFrame", frame)
-logBox.Size = UDim2.new(1, -20, 1, -40)
-logBox.Position = UDim2.new(0, 10, 0, 40)
-logBox.CanvasSize = UDim2.new(0, 0, 5, 0)
-logBox.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-logBox.ScrollBarThickness = 6
-logBox.BorderSizePixel = 0
-logBox.AutomaticCanvasSize = Enum.AutomaticSize.Y
-logBox.Name = "LogBox"
-
-local layout = Instance.new("UIListLayout", logBox)
-layout.Padding = UDim.new(0, 5)
+-- 🧾 Log
+local log = Instance.new("TextLabel", frame)
+log.Position = UDim2.new(0, 5, 0, 35)
+log.Size = UDim2.new(1, -10, 1, -40)
+log.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+log.TextColor3 = Color3.fromRGB(180, 255, 180)
+log.TextXAlignment = Enum.TextXAlignment.Left
+log.TextYAlignment = Enum.TextYAlignment.Top
+log.Font = Enum.Font.Code
+log.TextSize = 14
+log.TextWrapped = true
+log.Text = "[RemoteSpy Log]\n"
+log.ClipsDescendants = true
+log.TextYAlignment = Enum.TextYAlignment.Top
+log.TextTruncate = Enum.TextTruncate.AtEnd
 
 -- 🔁 State
 local spying = true
-toggleButton.MouseButton1Click:Connect(function()
+local maxLines = 50
+
+toggle.MouseButton1Click:Connect(function()
     spying = not spying
-    toggleButton.Text = spying and "🟢 RemoteSpy ON" or "🔴 RemoteSpy OFF"
+    toggle.Text = spying and "🟢 ON" or "🔴 OFF"
 end)
 
--- 🧹 Clear Log
-clearButton.MouseButton1Click:Connect(function()
-    for _, child in pairs(logBox:GetChildren()) do
-        if child:IsA("TextLabel") then
-            child:Destroy()
-        end
-    end
+clearBtn.MouseButton1Click:Connect(function()
+    log.Text = "[RemoteSpy Log]\n"
 end)
 
--- 🧠 Remote Hooking
+-- 📡 Spy logic
 local mt = getrawmetatable(game)
 local old = mt.__namecall
 setreadonly(mt, false)
@@ -84,30 +82,20 @@ setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     if spying and (method == "FireServer" or method == "InvokeServer") and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
-        local remoteName = self:GetFullName()
+        local name = self:GetFullName()
         local filter = string.lower(filterBox.Text)
-
-        if filter == "" or string.find(string.lower(remoteName), filter, 1, true) then
+        if filter == "" or string.find(string.lower(name), filter, 1, true) then
             local args = {...}
-            local msg = remoteName .. " [" .. method .. "]\nArgs:"
-            for i, v in ipairs(args) do
-                msg = msg .. "\n  [" .. i .. "] = " .. tostring(v)
+            local text = "\n["..method.."] "..name
+            for i,v in pairs(args) do
+                text = text.."\n  ["..i.."] = "..tostring(v)
             end
 
-            local label = Instance.new("TextLabel")
-            label.Text = msg
-            label.Size = UDim2.new(1, -10, 0, 60)
-            label.TextWrapped = true
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            label.TextYAlignment = Enum.TextYAlignment.Top
-            label.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-            label.TextColor3 = Color3.fromRGB(200, 255, 200)
-            label.Font = Enum.Font.Code
-            label.TextSize = 14
-            label.Parent = logBox
-
-            task.wait(0.05)
-            logBox.CanvasPosition = Vector2.new(0, logBox.CanvasSize.Y.Offset)
+            -- Keep only last 50 lines
+            local split = string.split(log.Text, "\n")
+            while #split > maxLines do table.remove(split, 2) end
+            table.insert(split, text)
+            log.Text = table.concat(split, "\n")
         end
     end
     return old(self, ...)
